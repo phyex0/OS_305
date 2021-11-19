@@ -32,7 +32,7 @@ int main() {
 	int random_numbers[5];
 	guess(random_numbers);
 
-
+	//run game...
 	printf("The game has launched\n");
 	printf("Computer choses [");
 	for (int i = 0; i < 5; i++)
