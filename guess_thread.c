@@ -15,16 +15,18 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 //global variable which is allowed to access by all threads.
 int guess_by_thread[3][5];
 
 int random_number();
 void guess(int array[]);
-void* runner(void* param);
+void *runner(void *param);
 void comparasion(int score[], int randoms[]);
 
-int main() {
+int main()
+{
 
 	srand(time(NULL));
 
@@ -53,14 +55,29 @@ int main() {
 	for (int i = 0; i < 3; i++)
 		pthread_join(tid[i], NULL);
 
-
-
-	int score[3] = { 0, 0, 0 };
+	int score[3] = {0, 0, 0};
 	comparasion(score, random_numbers);
 
 	//resulting
-	printf("Guesses mad by threads: [");
-	for (int i = 0; i < 3; i++) {
+	int max_score = 0;
+	for (int i = 0; i < 3; i++)
+		if (max_score < score[i])
+			max_score = score[i];
+
+	int and_flag = 0;
+	for (int i = 0; i < 3; i++)
+		if (max_score == score[i])
+		{
+			if (and_flag)
+				printf("and ");
+			printf("%d.Thread ", i + 1);
+			and_flag = 1;
+		}
+	printf("won the game with score: Score: %d – %d – %d.\n--\n--\n", score[0], score[1], score[2]);
+
+	printf("Guesses made by threads: [");
+	for (int i = 0; i < 3; i++)
+	{
 		for (int j = 0; j < 5; j++)
 			printf("%d_%d, ", i + 1, guess_by_thread[i][j]);
 	}
@@ -69,54 +86,56 @@ int main() {
 	for (int i = 1; i <= 3; i++)
 		printf("%d. Thread terminated\n", i);
 
-	printf("Threads are joined by main process \n Game Finished\n");
-
+	printf("Threads are joined by main process \nGame Finished\n");
 
 	return 0;
 }
 
 //runner method of theads.
-void* runner(void* param) {
-	//type casting for the integer array. 
-	int* i = (int*)param;
+void *runner(void *param)
+{
+	//type casting for the integer array.
+	int *i = (int *)param;
 
 	guess(i);
 	pthread_exit(0);
-
 }
 
-int random_number() {
+int random_number()
+{
 	return rand() % 99 + 1;
 }
 
-void guess(int array[5]) {
+void guess(int array[5])
+{
 	for (int i = 0; i < 5; i++)
 		array[i] = random_number();
 }
 
-
 //Makes the comparassion for the guesses of theads.
-void comparasion(int score[], int randoms[]) {
+void comparasion(int score[], int randoms[])
+{
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++)
+	{
 		printf("Turn %d, Guesses: 1.thread: %d, 2:thread: %d, 3:thread: %d \n", i + 1, guess_by_thread[0][i], guess_by_thread[1][i], guess_by_thread[2][i]);
 
-		if (abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[1][i]) && abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[2][i])) {
+		if (abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[1][i]) && abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[2][i]))
+		{
 			score[0]++;
 			printf("1. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[0][i], randoms[i]);
 		}
 
-		else if (abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[0][i]) && abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[2][i])) {
+		else if (abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[0][i]) && abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[2][i]))
+		{
 			score[1]++;
 			printf("2. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[1][i], randoms[i]);
 		}
 
-		else {
+		else
+		{
 			score[2]++;
 			printf("3. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[2][i], randoms[i]);
 		}
-
 	}
-
 }
-
