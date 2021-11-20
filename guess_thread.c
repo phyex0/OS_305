@@ -66,7 +66,6 @@ int main()
 
 	int and_flag = 0;
 	for (int i = 0; i < 3; i++)
-	{
 		if (max_score == score[i])
 		{
 			if (and_flag)
@@ -74,7 +73,6 @@ int main()
 			printf("%d.Thread ", i + 1);
 			and_flag = 1;
 		}
-	}
 	printf("won the game with score: Score: %d – %d – %d.\n--\n--\n", score[0], score[1], score[2]);
 
 	printf("Guesses made by threads: [");
