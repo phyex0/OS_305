@@ -109,7 +109,7 @@ void *runner(void *param)
 							done[j] = 0;
 						pthread_mutex_unlock(&lock);
 						
-					}
+				}
 			}
 			
 			
