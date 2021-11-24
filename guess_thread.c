@@ -19,18 +19,19 @@
 #include <pthread.h>
 
 //global variable which is allowed to access by all threads.
-char guess_by_threads[15][5];
-int global_index = 0;
-int done[] = {0,0,0};
-int score[3] = {0, 0, 0};
+char guess_by_threads[15][5]; //storing results
+int global_index = 0;  // last assigned index
+int done[] = { 0,0,0 }; //when a thread done with guess increases 1 for given index
+int score[3] = { 0, 0, 0 }; // 
 int random_numbers[5];
 
 //to prevent collision race condition mutex initialized.
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
+//function declerations.
 int random_number();
 void guess(int array[]);
-void *runner(void *param);
+void* runner(void* param);
 void compare(int round);
 void substring(char* source, char* dest, int begin, int len);
 void resulting();
@@ -39,7 +40,6 @@ int main() {
 	srand(time(NULL));
 
 	//computer made its own decision.
-	
 	guess(random_numbers);
 
 	//run game...
@@ -52,29 +52,27 @@ int main() {
 	printf("3 threads will be created\n");
 	printf("The game starts\n--\n");
 
-	
+
 	//defining threads' id
 	pthread_t tid[4];
-	
+
 	//creating threads.
-	for (int i = 0; i < 4; i++){
-		int *param = malloc(sizeof(*param));
+	for (int i = 0; i < 4; i++) {
+		int* param = malloc(sizeof(*param));
 		*param = i + 1;
 		pthread_create(&tid[i], NULL, runner, param);
 
 	}
-		
+
 	//terminating the threads.
 	for (int i = 0; i < 4; i++)
 		pthread_join(tid[i], NULL);
 
-		
 	resulting();
-	
-	
+
 	//prints the guess_by_threads array
 	printf("Guesses made by threads: [");
-	for(int i = 0; i < 15; i++){
+	for (int i = 0; i < 15; i++) {
 		printf("%s, ", guess_by_threads[i]);
 	}
 	printf("] \n--\n--\n");
@@ -84,50 +82,52 @@ int main() {
 
 	printf("Threads are joined by main process \nGame Finished\n");
 
-	
+
 	return 0;
 }
 
 //runner method of theads.
-void *runner(void *param)
+void* runner(void* param)
 {
 	//type casting for the which thread.
 	int tid = *(int*)param;
-	
-	for(int i = 0; i < 5; i++){
-		if(global_index < 15){
-			if(tid != 4){
+
+	for (int i = 0; i < 5; i++) {
+		//First three thread makes guesses.
+		if (global_index < 15) {
+			if (tid != 4) {
 				//for the race condition.
 				pthread_mutex_lock(&lock);
-				sprintf(guess_by_threads[global_index++],"%d_%d\0",tid,random_number());
+				sprintf(guess_by_threads[global_index++], "%d_%d\0", tid, random_number());
 				done[tid - 1] = 1;
 				pthread_mutex_unlock(&lock);
-			
-				while(done[tid - 1] != 0);
+
+				while (done[tid - 1] != 0);
 			}
-			
-			else{
-			
-				while(!(done[0]== 1 && done[1] == 1 && done[2] == 1));
 
-				if(done[0]== 1 && done[1] == 1 && done[2] == 1){
-						//make compare;
-						compare(i);
+			//4th thred is controllik the rounds.
+			else {
 
-						//make ready for the next round
-						pthread_mutex_lock(&lock);
-						for(int j = 0; j < 3; j++)
-							done[j] = 0;
-						pthread_mutex_unlock(&lock);
-						
+				while (!(done[0] == 1 && done[1] == 1 && done[2] == 1));
+
+				if (done[0] == 1 && done[1] == 1 && done[2] == 1) {
+					//make compare;
+					compare(i);
+
+					//make ready for the next round
+					pthread_mutex_lock(&lock);
+					for (int j = 0; j < 3; j++)
+						done[j] = 0;
+					pthread_mutex_unlock(&lock);
+
 				}
 			}
-			
-			
+
+
 		}
-		
+
 	}
-	
+
 	pthread_exit(0);
 }
 
@@ -143,14 +143,14 @@ void guess(int array[5])
 }
 
 //Makes the compare for the guesses of theads.
-void compare(int round){
+void compare(int round) {
 	int guesses[3];
 	char number[3];
-	for(int i = global_index - 3; i < global_index; i++){
-		substring(&guess_by_threads[i],&number,2,strlen(guess_by_threads[i]));
+	for (int i = global_index - 3; i < global_index; i++) {
+		substring(&guess_by_threads[i], &number, 2, strlen(guess_by_threads[i]));
 		guesses[atoi(&guess_by_threads[i][0]) - 1] = atoi(number);
 	}
-		
+
 	printf("Turn %d, Guesses: 1.thread : %d, 2.theard: %d, 3.thread: %d \n", round + 1, guesses[0], guesses[1], guesses[2]);
 
 	if (abs(random_numbers[round] - guesses[0]) < abs(random_numbers[round] - guesses[1]) && abs(random_numbers[round] - guesses[0]) < abs(random_numbers[round] - guesses[2]))
@@ -173,13 +173,15 @@ void compare(int round){
 
 }
 
-void substring(char* source, char* dest, int begin, int len){
-	for(int i = begin; i < len + 1; i++)
+//to converting 15x5 arrays value we need substring method.
+void substring(char* source, char* dest, int begin, int len) {
+	for (int i = begin; i < len + 1; i++)
 		dest[i - 2] = source[i];
 }
 
-void resulting(){
-	//resulting
+//Finding the winner(s)
+void resulting() {
+
 	int max_score = 0;
 	for (int i = 0; i < 3; i++)
 		if (max_score < score[i])
