@@ -21,8 +21,8 @@
 char guess_by_threads[15][5];
 int index = 0;
 int done[] = {0,0,0};
+
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 int random_number();
 void guess(int array[]);
@@ -66,7 +66,11 @@ int main()
 	printf("Joined\n");
 	int score[3] = {0, 0, 0};
 
+	//prints the guess_by_threads array
 	for(int i = 0; i < 15; i++){
+		
+		if(i%3 == 0)
+			printf("\n");
 		printf("%s\n", guess_by_threads[i]);
 	}
 
@@ -76,34 +80,35 @@ int main()
 //runner method of theads.
 void *runner(void *param)
 {
-	//type casting for the integer array.
+	//type casting for the which thread.
 	int tid = *(int*)param;
-	printf("ID : %d\n", tid);
-
+	
 	for(int i = 0; i < 5; i++){
 		if(index < 15){
 			if(tid != 4){
 				pthread_mutex_lock(&lock);
 				sprintf(guess_by_threads[index++],"%d_%d\0",tid,random_number());
-				done[tid] = 1;
+				done[tid - 1] = 1;
 				pthread_mutex_unlock(&lock);
-
-				while(done[i] == 1);
-					
+			
+				while(done[tid - 1] != 0);
 			}
 			
 			else{
-				
+			
 				while(!(done[0]== 1 && done[1] == 1 && done[2] == 1));
-					
+
 				if(done[0]== 1 && done[1] == 1 && done[2] == 1){
-					//make comparassion;
-					pthread_mutex_lock(&lock);
-					for(int j = 0; j < 3; j++)
-						done[j] = 0;
-					pthread_mutex_unlock(&lock);
-					
-				}
+						//make comparassion;
+
+
+
+						pthread_mutex_lock(&lock);
+						for(int j = 0; j < 3; j++)
+							done[j] = 0;
+						pthread_mutex_unlock(&lock);
+						
+					}
 			}
 			
 			
