@@ -32,6 +32,8 @@ int random_number();
 void guess(int array[]);
 void *runner(void *param);
 void compare(int round);
+void substring(char* source, char* dest, int begin, int len);
+void resulting();
 
 int main() {
 	srand(time(NULL));
@@ -65,16 +67,24 @@ int main() {
 	//terminating the threads.
 	for (int i = 0; i < 4; i++)
 		pthread_join(tid[i], NULL);
-	printf("Joined\n");
 
+		
+	resulting();
+	
 	
 	//prints the guess_by_threads array
+	printf("Guesses made by threads: [");
 	for(int i = 0; i < 15; i++){
-		if(i%3 == 0)
-			printf("\n");
-		printf("%s\n", guess_by_threads[i]);
+		printf("%s, ", guess_by_threads[i]);
 	}
+	printf("] \n--\n--\n");
 
+	for (int i = 1; i <= 3; i++)
+		printf("%d. Thread terminated\n", i);
+
+	printf("Threads are joined by main process \nGame Finished\n");
+
+	
 	return 0;
 }
 
@@ -102,9 +112,9 @@ void *runner(void *param)
 
 				if(done[0]== 1 && done[1] == 1 && done[2] == 1){
 						//make compare;
-						compare(i + 1);
+						compare(i);
 
-						//until here make compare.
+						//make ready for the next round
 						pthread_mutex_lock(&lock);
 						for(int j = 0; j < 3; j++)
 							done[j] = 0;
@@ -135,14 +145,13 @@ void guess(int array[5])
 //Makes the compare for the guesses of theads.
 void compare(int round){
 	int guesses[3];
+	char number[3];
 	for(int i = global_index - 3; i < global_index; i++){
-		char number[3];
-		substring(guess_by_threads[i],number,2,strlen(guess_by_threads[i]));
-		guesses[atoi(&guess_by_threads[i][0])] = atoi(number);
+		substring(&guess_by_threads[i],&number,2,strlen(guess_by_threads[i]));
+		guesses[atoi(&guess_by_threads[i][0]) - 1] = atoi(number);
 	}
 		
-
-	printf("Turn %d, Guesses: 1.thread : %d, 2.theard: %d, 3.thread: %d \n", round, guesses[0], guesses[1], guesses[2]);
+	printf("Turn %d, Guesses: 1.thread : %d, 2.theard: %d, 3.thread: %d \n", round + 1, guesses[0], guesses[1], guesses[2]);
 
 	if (abs(random_numbers[round] - guesses[0]) < abs(random_numbers[round] - guesses[1]) && abs(random_numbers[round] - guesses[0]) < abs(random_numbers[round] - guesses[2]))
 	{
@@ -165,6 +174,26 @@ void compare(int round){
 }
 
 void substring(char* source, char* dest, int begin, int len){
-	for(int i = begin; i < len; i++)
-		dest[i] = source[i];
+	for(int i = begin; i < len + 1; i++)
+		dest[i - 2] = source[i];
+}
+
+void resulting(){
+	//resulting
+	int max_score = 0;
+	for (int i = 0; i < 3; i++)
+		if (max_score < score[i])
+			max_score = score[i];
+
+	int and_flag = 0;
+	for (int i = 0; i < 3; i++)
+		if (max_score == score[i])
+		{
+			if (and_flag)
+				printf("and ");
+			printf("%d.Thread ", i + 1);
+			and_flag = 1;
+		}
+	printf("won the game with score: Score: %d – %d – %d.\n--\n--\n", score[0], score[1], score[2]);
+
 }
