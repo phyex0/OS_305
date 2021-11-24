@@ -22,7 +22,7 @@
 char guess_by_threads[15][5]; //storing results
 int global_index = 0;  // last assigned index
 int done[] = { 0,0,0 }; //when a thread done with guess increases 1 for given index
-int score[3] = { 0, 0, 0 }; // 
+int score[] = { 0, 0, 0 }; // 
 int random_numbers[5];
 
 //to prevent collision race condition mutex initialized.
