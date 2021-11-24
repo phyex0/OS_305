@@ -22,6 +22,7 @@ char guess_by_threads[15][5];
 int index = 0;
 int done[] = {0,0,0};
 
+//to prevent collision race condition mutex initialized.
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 int random_number();
@@ -64,11 +65,10 @@ int main()
 	for (int i = 0; i < 4; i++)
 		pthread_join(tid[i], NULL);
 	printf("Joined\n");
-	int score[3] = {0, 0, 0};
 
+	int score[3] = {0, 0, 0};
 	//prints the guess_by_threads array
 	for(int i = 0; i < 15; i++){
-		
 		if(i%3 == 0)
 			printf("\n");
 		printf("%s\n", guess_by_threads[i]);
@@ -86,6 +86,7 @@ void *runner(void *param)
 	for(int i = 0; i < 5; i++){
 		if(index < 15){
 			if(tid != 4){
+				//for the race condition.
 				pthread_mutex_lock(&lock);
 				sprintf(guess_by_threads[index++],"%d_%d\0",tid,random_number());
 				done[tid - 1] = 1;
@@ -102,7 +103,7 @@ void *runner(void *param)
 						//make comparassion;
 
 
-
+						//until here make comparassion.
 						pthread_mutex_lock(&lock);
 						for(int j = 0; j < 3; j++)
 							done[j] = 0;
