@@ -1,11 +1,11 @@
 ﻿/*
 
 	Halit Burak Yeşildal		18050111043
-	Ayşe Tüncer					17050111058
-	Zeynep Nur Tüncel			17050111011
-	Yakup Batuhan Ördek			18050111041
-	Berna Altun					16050111040
-	Enes Güler					18050111005
+	Ayşe Tüncer			17050111058
+	Zeynep Nur Tüncel		17050111011
+	Yakup Batuhan Ördek		18050111041
+	Berna Altun			16050111040
+	Enes Güler			18050111005
 
 */
 
