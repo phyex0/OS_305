@@ -18,7 +18,11 @@
 #include <pthread.h>
 
 //global variable which is allowed to access by all threads.
-int guess_by_thread[3][5];
+char guess_by_threads[15][5];
+int index = 0;
+int done[] = {0,0,0};
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 int random_number();
 void guess(int array[]);
@@ -44,49 +48,27 @@ int main()
 	printf("3 threads will be created\n");
 	printf("The game starts\n--\n");
 
+	
 	//defining threads' id
-	pthread_t tid[3];
-
+	pthread_t tid[4];
+	
 	//creating threads.
-	for (int i = 0; i < 3; i++)
-		pthread_create(&tid[i], NULL, runner, guess_by_thread[i]);
+	for (int i = 0; i < 4; i++){
+		int *param = malloc(sizeof(*param));
+		*param = i + 1;
+		pthread_create(&tid[i], NULL, runner, param);
 
-	//terminating the threads.
-	for (int i = 0; i < 3; i++)
-		pthread_join(tid[i], NULL);
-
-	int score[3] = {0, 0, 0};
-	comparasion(score, random_numbers);
-
-	//resulting
-	int max_score = 0;
-	for (int i = 0; i < 3; i++)
-		if (max_score < score[i])
-			max_score = score[i];
-
-	int and_flag = 0;
-	for (int i = 0; i < 3; i++)
-		if (max_score == score[i])
-		{
-			if (and_flag)
-				printf("and ");
-			printf("%d.Thread ", i + 1);
-			and_flag = 1;
-		}
-	printf("won the game with score: Score: %d – %d – %d.\n--\n--\n", score[0], score[1], score[2]);
-
-	printf("Guesses made by threads: [");
-	for (int i = 0; i < 3; i++)
-	{
-		for (int j = 0; j < 5; j++)
-			printf("%d_%d, ", i + 1, guess_by_thread[i][j]);
 	}
-	printf("] \n --\n--\n");
+		
+	//terminating the threads.
+	for (int i = 0; i < 4; i++)
+		pthread_join(tid[i], NULL);
+	printf("Joined\n");
+	int score[3] = {0, 0, 0};
 
-	for (int i = 1; i <= 3; i++)
-		printf("%d. Thread terminated\n", i);
-
-	printf("Threads are joined by main process \nGame Finished\n");
+	for(int i = 0; i < 15; i++){
+		printf("%s\n", guess_by_threads[i]);
+	}
 
 	return 0;
 }
@@ -95,9 +77,40 @@ int main()
 void *runner(void *param)
 {
 	//type casting for the integer array.
-	int *i = (int *)param;
+	int tid = *(int*)param;
+	printf("ID : %d\n", tid);
 
-	guess(i);
+	for(int i = 0; i < 5; i++){
+		if(index < 15){
+			if(tid != 4){
+				pthread_mutex_lock(&lock);
+				sprintf(guess_by_threads[index++],"%d_%d\0",tid,random_number());
+				done[tid] = 1;
+				pthread_mutex_unlock(&lock);
+
+				while(done[i] == 1);
+					
+			}
+			
+			else{
+				
+				while(!(done[0]== 1 && done[1] == 1 && done[2] == 1));
+					
+				if(done[0]== 1 && done[1] == 1 && done[2] == 1){
+					//make comparassion;
+					pthread_mutex_lock(&lock);
+					for(int j = 0; j < 3; j++)
+						done[j] = 0;
+					pthread_mutex_unlock(&lock);
+					
+				}
+			}
+			
+			
+		}
+		
+	}
+	
 	pthread_exit(0);
 }
 
@@ -113,29 +126,3 @@ void guess(int array[5])
 }
 
 //Makes the comparassion for the guesses of theads.
-void comparasion(int score[], int randoms[])
-{
-
-	for (int i = 0; i < 5; i++)
-	{
-		printf("Turn %d, Guesses: 1.thread: %d, 2:thread: %d, 3:thread: %d \n", i + 1, guess_by_thread[0][i], guess_by_thread[1][i], guess_by_thread[2][i]);
-
-		if (abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[1][i]) && abs(randoms[i] - guess_by_thread[0][i]) < abs(randoms[i] - guess_by_thread[2][i]))
-		{
-			score[0]++;
-			printf("1. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[0][i], randoms[i]);
-		}
-
-		else if (abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[0][i]) && abs(randoms[i] - guess_by_thread[1][i]) < abs(randoms[i] - guess_by_thread[2][i]))
-		{
-			score[1]++;
-			printf("2. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[1][i], randoms[i]);
-		}
-
-		else
-		{
-			score[2]++;
-			printf("3. thread win, Score: %d - %d - %d, %d is closest to %d \n--\n--\n", score[0], score[1], score[2], guess_by_thread[2][i], randoms[i]);
-		}
-	}
-}
